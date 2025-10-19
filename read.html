@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: lightgrey;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .ingredients, .directions {
+            margin-top: 10px;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #007bff, #0056b3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recipe Details</h1>
+        <div id="recipe-details"></div>
+        <div class="controls">
+            <button id="control-button" onclick="toggleReading()">Start</button>
+            <button onclick="repeatLastLine()">Repeat Last Line</button>
+            <button onclick="changeSpeed(1)">Faster</button>
+            <button onclick="changeSpeed(-1)">Slower</button>
+        </div>
+        <button onclick="goBack()">Go Back</button>
+    </div>
+
+    <script>
+        const recipes = JSON.parse(localStorage.getItem('recipes')) || [];
+        let currentRecipe;
+        let speechSynthesis = window.speechSynthesis;
+        let utterance;
+        let lastLine;
+        let readingDelay = 2000; // Default delay in milliseconds
+        let currentLineIndex = 0;
+        let isPaused = false;
+
+        function getRecipeFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const recipeName = params.get('recipe');
+            return recipes.find(recipe => recipe.name === recipeName);
+        }
+
+        function displayRecipe(recipe) {
+            const recipeDetails = document.getElementById('recipe-details');
+            if (recipe) {
+                recipeDetails.innerHTML = `
+                    <h2>${recipe.name}</h2>
+                    <div class="ingredients">
+                        <strong>Ingredients:</strong><br>
+                        ${recipe.ingredients}
+                    </div>
+                    <div class="directions">
+                        <strong>Directions:</strong><br>
+                        ${recipe.directions}
+                    </div>
+                `;
+                lastLine = [
+                    recipe.name, 
+                    recipe.ingredients, 
+                    ...recipe.directions.split('\n').filter(Boolean) // Split directions into lines
+                ];
+            } else {
+                recipeDetails.innerHTML = '<p>Recipe not found.</p>';
+            }
+        }
+
+        function toggleReading() {
+            const controlButton = document.getElementById('control-button');
+            if (controlButton.textContent === "Start") {
+                controlButton.textContent = "Pause";
+                readLines(); // Start reading
+            } else if (controlButton.textContent === "Pause") {
+                controlButton.textContent = "Continue";
+                pauseReading(); // Pause reading
+            } else {
+                controlButton.textContent = "Pause";
+                isPaused = false;
+                readLines(); // Continue reading
+            }
+        }
+
+        function readLines() {
+            if (currentLineIndex < lastLine.length && !isPaused) {
+                utterance = new SpeechSynthesisUtterance(lastLine[currentLineIndex]);
+                const selectedVoice = speechSynthesis.getVoices().find(voice => voice.name === "Google US English"); // Example voice
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                speechSynthesis.speak(utterance);
+                currentLineIndex++;
+                utterance.onend = function() {
+                    if (!isPaused) {
+                        setTimeout(readLines, readingDelay); // Delay before reading the next line
+                    }
+                };
+            }
+        }
+
+        function pauseReading() {
+            if (speechSynthesis.speaking) {
+                speechSynthesis.pause();
+                isPaused = true;
+            }
+        }
+
+        function repeatLastLine() {
+            if (lastLine && lastLine.length > 0) {
+                let last = lastLine[currentLineIndex - 1]; // Get the last line read
+                utterance = new SpeechSynthesisUtterance(last);
+                const selectedVoice = speechSynthesis.getVoices().find(voice => voice.name === "Google US English"); // Example voice
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function changeSpeed(direction) {
+            if (direction === 1 && readingDelay > 500) {
+                readingDelay -= 500; // Decrease delay for faster reading
+            } else if (direction === -1) {
+                readingDelay += 500; // Increase delay for slower reading
+            }
+        }
+
+        function goBack() {
+            pauseReading(); // Pause the recipe reading
+            const controlButton = document.getElementById('control-button');
+            controlButton.textContent = "Continue"; // Set button to Continue
+            // Logic to go back or stop reading can be handled here
+            // For example, you can navigate back to the previous page or reset the state as needed
+            window.location.href = "pick.html"; // Go back to the recipe list
+        }
+
+        currentRecipe = getRecipeFromURL();
+        displayRecipe(currentRecipe);
+    </script>
+</body>
+</html>

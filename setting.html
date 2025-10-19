@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            background-color: lightgrey;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .settings-title {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: calc(100% - 22px); /* Adjust width for padding and border */
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid red;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+
+        input.valid {
+            border-color: green;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #007bff, #0056b3);
+        }
+
+        .sample-button {
+            width: auto; /* Make the sample button smaller */
+            padding: 10px;
+            margin: 10px 0; /* Space between buttons */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="settings-title">Settings</h1>
+        <label for="theme">Select Theme:</label>
+        <select id="theme" onchange="changeTheme()">
+            <option value="day">Day</option>
+            <option value="night">Night</option>
+        </select>
+
+        <label for="reading-delay">Reading Delay (seconds):</label>
+        <input type="number" id="reading-delay" value="2" min="1" required>
+
+        <label for="voice-select">Select Voice:</label>
+        <select id="voice-select" onchange="playSample()">
+            <option value="voice1">Voice 1</option>
+            <option value="voice2">Voice 2</option>
+            <option value="voice3">Voice 3</option>
+        </select>
+        <button class="sample-button" onclick="playSample()">Play Sample</button>
+
+        <button onclick="saveSettings()">Save Settings</button>
+    </div>
+
+    <script>
+        function changeTheme() {
+            const theme = document.getElementById('theme').value;
+            if (theme === 'night') {
+                document.body.style.backgroundColor = '#333';
+                document.body.style.color = '#fff';
+                localStorage.setItem('theme', 'night');
+            } else {
+                document.body.style.backgroundColor = '#f4f4f4';
+                document.body.style.color = '#000';
+                localStorage.setItem('theme', 'day');
+            }
+        }
+
+        function playSample() {
+            const voice = document.getElementById('voice-select').value;
+            let message = "Hello";
+
+            const utterance = new SpeechSynthesisUtterance(message);
+            switch (voice) {
+                case 'voice1':
+                    utterance.voice = speechSynthesis.getVoices()[0]; // Replace with actual voice
+                    break;
+                case 'voice2':
+                    utterance.voice = speechSynthesis.getVoices()[1]; // Replace with actual voice
+                    break;
+                case 'voice3':
+                    utterance.voice = speechSynthesis.getVoices()[2]; // Replace with actual voice
+                    break;
+                default:
+                    break;
+            }
+            speechSynthesis.speak(utterance);
+        }
+
+        function saveSettings() {
+            const readingDelay = document.getElementById('reading-delay').value;
+            const selectedVoice = document.getElementById('voice-select').value;
+
+            // Save settings to localStorage
+            localStorage.setItem('readingDelay', readingDelay);
+            localStorage.setItem('selectedVoice', selectedVoice);
+
+            alert("Settings saved!");
+
+            // Redirect to the recipe search page
+            window.location.href = 'pick.html';
+        }
+
+        // Load settings on page load
+        window.onload = function() {
+            const savedDelay = localStorage.getItem('readingDelay');
+            const savedVoice = localStorage.getItem('selectedVoice');
+            const savedTheme = localStorage.getItem('theme');
+
+            if (savedDelay) {
+                document.getElementById('reading-delay').value = savedDelay;
+            }
+
+            if (savedVoice) {
+                document.getElementById('voice-select').value = savedVoice;
+            }
+
+            if (savedTheme) {
+                document.getElementById('theme').value = savedTheme;
+                changeTheme();
+            }
+        };
+    </script>
+</body>
+</html>

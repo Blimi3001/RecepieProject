@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            background-color: lightgrey;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin-bottom: 20px;
+        }
+
+        input, button, textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid red;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #007bff, #0056b3);
+        }
+
+        .recipe-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .ingredients-display {
+            margin-top: 10px;
+            display: none;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 5px; /* Space between buttons */
+        }
+
+        .small-button {
+            font-size: 0.8em; /* Smaller font size for buttons */
+            padding: 5px; /* Smaller padding */
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Recipe Search</h1>
+        <input type="text" id="search" placeholder="Search for a recipe..." oninput="searchRecipes()">
+        <ul id="recipe-list" class="recipe-list"></ul>
+        <button onclick="showAddRecipeForm()">Add Recipe</button>
+    </div>
+
+    <div class="container" id="add-recipe-container" style="display: none;">
+        <h2>Add Recipe</h2>
+        <input type="text" id="recipe-name" placeholder="Recipe Name">
+        <textarea id="ingredients" placeholder="Ingredients" rows="4"></textarea>
+        <textarea id="directions" placeholder="Directions" rows="4"></textarea>
+        <button onclick="saveRecipe()">Save Recipe</button>
+    </div>
+
+    <script>
+        const recipes = JSON.parse(localStorage.getItem('recipes')) || [];
+
+        // Load theme from localStorage
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'night') {
+            document.body.style.backgroundColor = '#333';
+            document.body.style.color = '#fff';
+        }
+
+        function searchRecipes() {
+            const query = document.getElementById('search').value.toLowerCase();
+            const filteredRecipes = recipes.filter(recipe => recipe.name.toLowerCase().includes(query));
+            displayRecipes(filteredRecipes, query);
+        }
+
+        function displayRecipes(filteredRecipes, query) {
+            const recipeList = document.getElementById('recipe-list');
+            recipeList.innerHTML = '';
+            filteredRecipes.forEach(recipe => {
+                const li = document.createElement('li');
+                const regex = new RegExp(`(${query})`, 'gi'); // Create a regex to match the input
+                li.innerHTML = recipe.name.replace(regex, '<span class="bold">\$1</span>'); // Bold the matched text
+
+                const ingredientsDisplay = document.createElement('div');
+                ingredientsDisplay.className = 'ingredients-display';
+                ingredientsDisplay.innerHTML = `<strong>Ingredients:</strong><br>${recipe.ingredients}`;
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'button-container';
+
+                const showIngredientsButton = document.createElement('button');
+                showIngredientsButton.className = 'small-button';
+                showIngredientsButton.textContent = 'Show Ingredients';
+                showIngredientsButton.onclick = () => {
+                    if (ingredientsDisplay.style.display === 'none' || ingredientsDisplay.style.display === '') {
+                        ingredientsDisplay.style.display = 'block';
+                    }
+                };
+
+                const pickRecipeButton = document.createElement('button');
+                pickRecipeButton.className = 'small-button';
+                pickRecipeButton.textContent = 'Pick this Recipe';
+                pickRecipeButton.onclick = () => pickRecipe(recipe.name);
+
+                buttonContainer.appendChild(showIngredientsButton);
+                buttonContainer.appendChild(pickRecipeButton);
+                li.appendChild(buttonContainer);
+                li.appendChild(ingredientsDisplay);
+                recipeList.appendChild(li);
+            });
+        }
+
+        function pickRecipe(recipeName) {
+            // Redirect to read.html with the selected recipe name as a URL parameter
+            window.location.href = `read.html?recipe=${encodeURIComponent(recipeName)}`;
+        }
+
+        function showAddRecipeForm() {
+            document.getElementById('add-recipe-container').style.display = 'block';
+        }
+
+        function saveRecipe() {
+            const name = document.getElementById('recipe-name').value;
+            const ingredients = document.getElementById('ingredients').value;
+            const directions = document.getElementById('directions').value;
+
+            if (name && ingredients && directions) {
+                recipes.push({ name, ingredients, directions });
+                localStorage.setItem('recipes', JSON.stringify(recipes)); // Save recipes to localStorage
+                alert("Recipe saved!");
+                document.getElementById('recipe-name').value = '';
+                document.getElementById('ingredients').value = '';
+                document.getElementById('directions').value = '';
+                document.getElementById('add-recipe-container').style.display = 'none';
+                searchRecipes(); // Refresh the search results
+            } else {
+                alert("Please fill all fields.");
+            }
+        }
+    </script>
+</body>
+</html>
