@@ -1,27 +1,147 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
 
-<meta charset="UTF-8">
+        .container {
+            background-color: lightgrey;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        .login-title {
+            text-align: center;
+            font-weight: bold;
+        }
 
-<title>Home</title>
+        input {
+            width: calc(100% - 22px); /* Adjust width for padding and border */
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid red;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
 
+        input.valid {
+            border-color: green;
+        }
+
+        .error-message {
+            color: red;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background-color: blue;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: linear-gradient(to right, #007bff, #0056b3);
+        }
+
+        .new-user {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
 </head>
-
 <body>
+    <div class="container">
+        <h1 class="login-title">Login</h1>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Name (required)" required oninput="validateInput(this)">
+            <input type="password" id="password" placeholder="Password (required)" required oninput="validateInput(this)">
+            <button onclick="login()">Sign In</button>
+            <p id="error-message" class="error-message"></p>
+            <div class="new-user">
+                 <button onclick="showSignup()">Sign Up</button>
+            </div>
+        </div>
 
-<h1>Welcome to the Recipe Project</h1>
+        <div id="signup-form" style="display: none;">
+            <h2>Sign Up</h2>
+            <input type="text" id="signup-username" placeholder="Name (required)" required oninput="validateInput(this)">
+            <input type="password" id="signup-password" placeholder="Password (required)" required oninput="validateInput(this)">
+            <input type="password" id="confirm-password" placeholder="Confirm Password (required)" required oninput="validateInput(this)">
+            <input type="text" id="phone" placeholder="Phone (required)" required oninput="validateInput(this)">
+            <button onclick="signup()">Create Account</button>
+            <p id="signup-error-message" class="error-message"></p>
+        </div>
+    </div>
+    <script>
+        let registeredUser = JSON.parse(localStorage.getItem('registeredUser'));
+        function validateInput(input) {
+            if (input.value.trim() !== '') {
+                input.classList.add('valid');
+            } else {
+                input.classList.remove('valid');
+            }
+        }
 
-<ul>
+        function login() {
+            const username = document.getElementById('username');
+            const password = document.getElementById('password');
+            const errorMessage = document.getElementById('error-message');
+            if (registeredUser && username.value === registeredUser.username && password.value === registeredUser.password) {
+                localStorage.setItem('username', registeredUser.username);
+                window.location.href = "setting.html"; 
+            } else {
+                errorMessage.textContent = "Username or password are wrong, try again or sign up if new user.";
+            }
+        }
 
-<li><a href="login.html">Login</a></li>
+        function showSignup() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'block';
+        }
 
-</ul>
+        function signup() {
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const phone = document.getElementById('phone').value;
+            const signupErrorMessage = document.getElementById('signup-error-message');
 
+            // Simple validation
+            if (!username || !password || !confirmPassword || !phone) {
+                signupErrorMessage.textContent = "All fields are required!";
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                signupErrorMessage.textContent = "Passwords do not match!";
+                return;
+            }
+
+            // Save the registered user
+            registeredUser = { username, password };
+            localStorage.setItem('registeredUser', JSON.stringify(registeredUser)); // Save user data to localStorage
+            signupErrorMessage.textContent = "Signup successful! You can now log in.";
+            document.getElementById('signup-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+    </script>
 </body>
-
 </html>
